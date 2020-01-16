@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Xunit;
-using VerifyCS = Test.Utilities.CSharpCodeFixVerifier<
+using VerifyCS = TestUtils::Test.Utilities.CSharpCodeFixVerifier<
     Microsoft.CodeAnalysis.Testing.EmptyDiagnosticAnalyzer, // Diagnostic is from the compiler
     Microsoft.CodeQuality.CSharp.Analyzers.ApiDesignGuidelines.CSharpOverrideEqualsOnOverloadingOperatorEqualsFixer>;
-using VerifyVB = Test.Utilities.VisualBasicCodeFixVerifier<
+using VerifyVB = TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<
     Microsoft.CodeQuality.VisualBasic.Analyzers.ApiDesignGuidelines.BasicOverrideEqualsOnOverloadingOperatorEqualsAnalyzer,
     Microsoft.CodeQuality.VisualBasic.Analyzers.ApiDesignGuidelines.BasicOverrideEqualsOnOverloadingOperatorEqualsFixer>;
 

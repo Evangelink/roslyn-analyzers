@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
-using VerifyCS = Test.Utilities.CSharpSecurityCodeFixVerifier<
+using VerifyCS = TestUtils::Test.Utilities.CSharpSecurityCodeFixVerifier<
     Microsoft.NetCore.Analyzers.Security.UseDefaultDllImportSearchPathsAttribute,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 

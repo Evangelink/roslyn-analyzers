@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Threading;
-using Test.Utilities.CodeMetrics;
+using TestUtils::Test.Utilities.CodeMetrics;
 using Xunit;
 
 namespace Microsoft.CodeAnalysis.CodeMetrics.UnitTests
@@ -10,7 +11,7 @@ namespace Microsoft.CodeAnalysis.CodeMetrics.UnitTests
     {
         protected override string GetMetricsDataString(Compilation compilation)
         {
-            return CodeAnalysisMetricData.ComputeAsync(compilation, CancellationToken.None).Result.ToString();
+            return CodeAnalysisMetricData.ComputeAsync(new CodeMetricsAnalysisContext(compilation, CancellationToken.None)).Result.ToString();
         }
 
         [Fact]

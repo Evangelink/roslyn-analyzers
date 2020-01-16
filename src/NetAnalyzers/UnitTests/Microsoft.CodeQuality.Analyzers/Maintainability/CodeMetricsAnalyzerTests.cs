@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
+using TestUtils::Test.Utilities;
 using Xunit;
-using VerifyCS = Test.Utilities.CSharpCodeFixVerifier<
+using VerifyCS = TestUtils::Test.Utilities.CSharpCodeFixVerifier<
     Microsoft.CodeQuality.Analyzers.Maintainability.CodeMetrics.CodeMetricsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = Test.Utilities.VisualBasicCodeFixVerifier<
+using VerifyVB = TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<
     Microsoft.CodeQuality.Analyzers.Maintainability.CodeMetrics.CodeMetricsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
@@ -25,13 +27,13 @@ class FirstDerivedClass : BaseClass { }
 class SecondDerivedClass : FirstDerivedClass { }
 class ThirdDerivedClass : SecondDerivedClass { }
 class FourthDerivedClass : ThirdDerivedClass { }
+class FifthDerivedClass : FourthDerivedClass { }
 
 // This class violates the rule.
-class FifthDerivedClass : FourthDerivedClass { }
+class SixthDerivedClass : FifthDerivedClass { }
 ";
             DiagnosticResult[] expected = new[] {
-                // Test0.cs(9, 7): warning CA1501: 'FifthDerivedClass' has an object hierarchy '6' levels deep within the defining module. If possible, eliminate base classes within the hierarchy to decrease its hierarchy level below '6': 'FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass, Object'
-                GetCSharpCA1501ExpectedDiagnostic(9, 7, "FifthDerivedClass", 6, 6, "FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass, Object")};
+                GetCSharpCA1501ExpectedDiagnostic(10, 7, "SixthDerivedClass", 6, 6, "FifthDerivedClass, FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass")};
             await VerifyCS.VerifyAnalyzerAsync(source, expected);
         }
 
@@ -61,10 +63,13 @@ End Class
 Class FifthDerivedClass
     Inherits FourthDerivedClass
 End Class
+
+Class SixthDerivedClass
+    Inherits FifthDerivedClass
+End Class
 ";
             DiagnosticResult[] expected = new[] {
-                // Test0.vb(21, 7): warning CA1501: 'FifthDerivedClass' has an object hierarchy '6' levels deep within the defining module. If possible, eliminate base classes within the hierarchy to decrease its hierarchy level below '6': 'FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass, Object'
-                GetBasicCA1501ExpectedDiagnostic(21, 7, "FifthDerivedClass", 6, 6, "FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass, Object")};
+                GetBasicCA1501ExpectedDiagnostic(25, 7, "SixthDerivedClass", 6, 6, "FifthDerivedClass, FourthDerivedClass, ThirdDerivedClass, SecondDerivedClass, FirstDerivedClass, BaseClass")};
             await VerifyVB.VerifyAnalyzerAsync(source, expected);
         }
 
@@ -79,11 +84,10 @@ class FirstDerivedClass : BaseClass { }
 # FORMAT:
 # 'RuleId'(Optional 'SymbolKind'): 'Threshold'
 
-CA1501: 1
+CA1501: 0
 ";
             DiagnosticResult[] expected = new[] {
-                // Test0.cs(3, 7): warning CA1501: 'BaseClass' has an object hierarchy '2' levels deep within the defining module. If possible, eliminate base classes within the hierarchy to decrease its hierarchy level below '2': 'BaseClass, Object'
-                GetCSharpCA1501ExpectedDiagnostic(3, 7, "FirstDerivedClass", 2, 2, "BaseClass, Object")};
+                GetCSharpCA1501ExpectedDiagnostic(3, 7, "FirstDerivedClass", 1, 1, "BaseClass")};
             await VerifyCSharpAsync(source, additionalText, expected);
         }
 
@@ -102,12 +106,64 @@ End Class
 # FORMAT:
 # 'RuleId'(Optional 'SymbolKind'): 'Threshold'
 
-CA1501: 1
+CA1501: 0
 ";
             DiagnosticResult[] expected = new[] {
-                // Test0.vb(5, 7): warning CA1501: 'BaseClass' has an object hierarchy '2' levels deep within the defining module. If possible, eliminate base classes within the hierarchy to decrease its hierarchy level below '2': 'BaseClass, Object'
-                GetBasicCA1501ExpectedDiagnostic(5, 7, "FirstDerivedClass", 2, 2, "BaseClass, Object")};
+                GetBasicCA1501ExpectedDiagnostic(5, 7, "FirstDerivedClass", 1, 1, "BaseClass")};
             await VerifyBasicAsync(source, additionalText, expected);
+        }
+
+        [Fact, WorkItem(1839, "https://github.com/dotnet/roslyn-analyzers/issues/1839")]
+        public async Task CA1501_ExcludesTypesInSystemNamespaceByDefault()
+        {
+            await new VerifyCS.Test
+            {
+                TestCode = "public class MyUC : System.Windows.Forms.UserControl {}",
+                ReferenceAssemblies = AdditionalMetadataReferences.DefaultWithWinForms,
+            }.RunAsync();
+
+            await new VerifyVB.Test
+            {
+                TestCode = @"
+Public Class MyUC
+    Inherits System.Windows.Forms.UserControl
+End Class",
+                ReferenceAssemblies = AdditionalMetadataReferences.DefaultWithWinForms,
+            }.RunAsync();
+        }
+
+        [Fact, WorkItem(1839, "https://github.com/dotnet/roslyn-analyzers/issues/1839")]
+        public async Task CA1501_UserConfigurationOverridesDefaultValue()
+        {
+            var editorConfigText = "dotnet_code_quality.CA1501.inheritance_excluded_type_names = T:SomeClass";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { "public class MyUC : System.Windows.Forms.UserControl {}" },
+                    AdditionalFiles = { (".editorconfig", editorConfigText) },
+                    ExpectedDiagnostics = { GetCSharpCA1501ExpectedDiagnostic(1, 14, "MyUC", 7, 6, "UserControl, ContainerControl, ScrollableControl, Control, Component, MarshalByRefObject, Object") },
+                },
+                ReferenceAssemblies = AdditionalMetadataReferences.DefaultWithWinForms,
+            }.RunAsync();
+
+            await new VerifyVB.Test
+            {
+                TestState =
+                {
+                    Sources =
+                    {
+                        @"
+Public Class MyUC
+    Inherits System.Windows.Forms.UserControl
+End Class"
+                    },
+                    AdditionalFiles = { (".editorconfig", editorConfigText) },
+                    ExpectedDiagnostics = { GetBasicCA1501ExpectedDiagnostic(2, 14, "MyUC", 7, 6, "UserControl, ContainerControl, ScrollableControl, Control, Component, MarshalByRefObject, Object") },
+                },
+                ReferenceAssemblies = AdditionalMetadataReferences.DefaultWithWinForms,
+            }.RunAsync();
         }
 
         #endregion

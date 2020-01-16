@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Test.Utilities.MinimalImplementations;
+using TestUtils::Test.Utilities.MinimalImplementations;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -42,11 +43,11 @@ public partial class WebForm : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         string userName = Request.Params[""user""];
-        string filter = ""(uid="" + userName + "")"";  //searching for the user entry 
+        string filter = ""(uid="" + userName + "")"";  //searching for the user entry
 
         // In this example, if we send the * character in the user parameter which will
-        // result in the filter variable in the code to be initialized with (uid=*). 
-        // The resulting LDAP statement will make the server return any object that 
+        // result in the filter variable in the code to be initialized with (uid=*).
+        // The resulting LDAP statement will make the server return any object that
         // contains a uid attribute.
         DirectorySearcher searcher = new DirectorySearcher(filter);
         SearchResultCollection results = searcher.FindAll();
@@ -76,8 +77,8 @@ Partial Public Class WebForm
         Dim filter As String = ""(uid="" + userName + "")""    ' searching for the user entry
 
         ' In this example, if we send the * character in the user parameter which will
-        ' result in the filter variable in the code to be initialized with (uid=*). 
-        ' The resulting LDAP statement will make the server return any object that 
+        ' result in the filter variable in the code to be initialized with (uid=*).
+        ' The resulting LDAP statement will make the server return any object that
         ' contains a uid attribute.
         Dim searcher As DirectorySearcher = new DirectorySearcher(filter)
         Dim results As SearchResultCollection = searcher.FindAll()

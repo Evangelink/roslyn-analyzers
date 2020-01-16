@@ -119,5 +119,18 @@ namespace Analyzer.Utilities
         ///   3. Default FxCop heuristic (75% of enum values)
         /// </summary>
         public const string EnumValuesPrefixTrigger = "enum_values_prefix_trigger";
+
+        /// <summary>
+        /// Names of types or namespaces (separated by '|'), such that the type or type's namespace doesn't count in the inheritance hierarchy tree.
+        /// Configurable rules: CA1501 (https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1501)
+        /// Allowed name formats:
+        ///   1. Type or namespace name (includes all types for which a part of its full name contains the name)
+        ///   2. Type or namespace name ending with a wildcard symbol (includes all types for which a part of its full name starts with the name)
+        ///   3. Fully qualified names in the symbol's documentation ID format: https://github.com/dotnet/csharplang/blob/master/spec/documentation-comments.md#id-string-format
+        ///      with an optional "T:" prefix for types or "N:" prefix for namespaces.
+        ///   4. Fully qualified names in the symbol's documentation ID format: https://github.com/dotnet/csharplang/blob/master/spec/documentation-comments.md#id-string-format
+        ///      with an optional "T:" prefix for types or "N:" prefix for namespaces and ending with the wildcard symbol.
+        /// </summary>
+        public const string InheritanceExcludedTypeNames = "inheritance_excluded_type_names";
     }
 }

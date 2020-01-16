@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BoundedCacheWithFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CodeMetrics\CodeMetricsAnalysisContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DoNotCatchGeneralUnlessRethrown.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CompilationExtensions.cs" />

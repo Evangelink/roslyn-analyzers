@@ -4,7 +4,9 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Test.Utilities\Test.Utilities.csproj" />
+    <ProjectReference Include="..\..\Test.Utilities\Test.Utilities.csproj">
+      <Aliases>TestUtils</Aliases>
+    </ProjectReference>
     <ProjectReference Include="..\Core\Microsoft.CodeAnalysis.NetAnalyzers.csproj" />
     <ProjectReference Include="..\CSharp\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.csproj" />
     <ProjectReference Include="..\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers.vbproj" />

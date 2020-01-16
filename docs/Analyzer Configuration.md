@@ -409,3 +409,25 @@ Option Values:
 Default Value: `Heuristic`.
 
 Example: `dotnet_code_quality.CA1712.enum_values_prefix_trigger = AnyEnumValue`
+
+### Inheritance excluded type or namespace names
+Option Name: `inheritance_excluded_type_names`
+
+Configurable Rules: [CA1501](https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1501)
+
+Option Values: Names of types or namespaces (separated by '|'), such that the type or type's namespace doesn't count in the inheritance hierarchy tree.
+Allowed symbol name formats:
+  1. Type name only (includes all types with the name, regardless of the containing type or namespace)
+  2. Fully qualified names in the symbol's documentation ID format: https://github.com/dotnet/csharplang/blob/master/spec/documentation-comments.md#id-string-format with an optional "T:" prefix for types or "N:" prefix for namespaces.
+
+Default Value: System.*
+
+Examples:
+
+| Option Value | Summary |
+| --- | --- |
+|`dotnet_code_quality.CA1501.inheritance_excluded_type_names = MyType` | Matches all types named 'MyType'
+|`dotnet_code_quality.CA1501.inheritance_excluded_type_names = MyType1\|MyType2` | Matches all types named either 'MyType1' or 'MyType2'
+|`dotnet_code_quality.CA1501.inheritance_excluded_type_names = T:NS.MyType` | Matches specific type 'MyType' with given fully qualified name
+|`dotnet_code_quality.CA1501.inheritance_excluded_type_names = T:NS1.MyType1\|T:NS2.MyType2` | Matches specific types 'MyType1' and 'MyType2' with respective fully qualified names
+|`dotnet_code_quality.CA1501.inheritance_excluded_type_names = N:NS` | Matches all types from the 'NS' namespace

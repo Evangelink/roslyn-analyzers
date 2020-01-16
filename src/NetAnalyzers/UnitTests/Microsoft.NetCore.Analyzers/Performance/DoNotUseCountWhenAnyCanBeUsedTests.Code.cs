@@ -1,18 +1,12 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System;
-using System.Linq;
-using System.Net;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.NetCore.Analyzers.Performance.UnitTests
 {
@@ -401,7 +395,7 @@ End Namespace
 
             internal override Task VerifyAsync(string[] testSources)
             {
-                var test = new Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
+                var test = new TestUtils::Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
 
                 foreach (var testSource in testSources)
                 {
@@ -416,7 +410,7 @@ End Namespace
 
             internal override Task VerifyAsync(string methodName, string[] testSources, string[] fixedSources)
             {
-                var test = new Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
+                var test = new TestUtils::Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
 
                 foreach (var testSource in testSources)
                 {
@@ -427,7 +421,7 @@ End Namespace
                 }
 
                 test.TestState.ExpectedDiagnostics.Add(
-                    Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Diagnostic(this.DiagnosticId)
+                    TestUtils::Test.Utilities.CSharpCodeFixVerifier<TAnalyzer, TCodeFix>.Diagnostic(this.DiagnosticId)
                         .WithLocation(GetNumberOfLines(testSources[0]) - 3, 21)
                         .WithArguments(methodName));
 
@@ -455,7 +449,7 @@ End Namespace
 
             internal override Task VerifyAsync(string[] testSources)
             {
-                var test = new Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
+                var test = new TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
 
                 foreach (var testSource in testSources)
                 {
@@ -470,7 +464,7 @@ End Namespace
 
             internal override Task VerifyAsync(string methodName, string[] testSources, string[] fixedSources)
             {
-                var test = new Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
+                var test = new TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Test();
 
                 foreach (var testSource in testSources)
                 {
@@ -481,7 +475,7 @@ End Namespace
                 }
 
                 test.TestState.ExpectedDiagnostics.Add(
-                    Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Diagnostic(this.DiagnosticId)
+                    TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>.Diagnostic(this.DiagnosticId)
                         .WithLocation(GetNumberOfLines(testSources[0]) - 3, 21)
                         .WithArguments(methodName));
 

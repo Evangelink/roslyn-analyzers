@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+extern alias TestUtils;
 
 using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.NetCore.CSharp.Analyzers.Runtime;
 using Xunit;
-using VerifyCS = Test.Utilities.CSharpCodeFixVerifier<
+using VerifyCS = TestUtils::Test.Utilities.CSharpCodeFixVerifier<
     Microsoft.NetCore.CSharp.Analyzers.Runtime.CSharpInitializeStaticFieldsInlineAnalyzer,
     Microsoft.NetCore.CSharp.Analyzers.Runtime.CSharpInitializeStaticFieldsInlineFixer>;
-using VerifyVB = Test.Utilities.VisualBasicCodeFixVerifier<
+using VerifyVB = TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<
     Microsoft.NetCore.VisualBasic.Analyzers.Runtime.BasicInitializeStaticFieldsInlineAnalyzer,
     Microsoft.NetCore.VisualBasic.Analyzers.Runtime.BasicInitializeStaticFieldsInlineFixer>;
 

@@ -1,15 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
-using System;
-using System.Linq;
-using System.Net;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Text;
+extern alias TestUtils;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp.Testing;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.NetCore.CSharp.Analyzers.Performance;
 using Microsoft.NetCore.VisualBasic.Analyzers.Performance;
@@ -239,7 +230,7 @@ namespace Microsoft.NetCore.Analyzers.Performance.UnitTests
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"using System;
 using System.Linq;
 class C
@@ -344,7 +335,7 @@ class C
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"using System;
 using System.Linq;
 class C
@@ -449,7 +440,7 @@ class C
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"Imports System
 Imports System.Linq
 Module C
@@ -558,7 +549,7 @@ End Module
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"Imports System
 Imports System.Linq
 Module C
@@ -735,7 +726,7 @@ End Module
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"using System;
 using System.Linq;
 namespace System.Data.Entity
@@ -856,7 +847,7 @@ namespace System.Data.Entity
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.CSharpCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, CSharpDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"using System;
 using System.Linq;
 namespace System.Data.Entity
@@ -977,7 +968,7 @@ namespace System.Data.Entity
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"Imports System
 Imports System.Linq
 Namespace System.Data.Entity
@@ -1112,7 +1103,7 @@ End Namespace
 
         [Fact]
         public Task TestConstIdentifiers()
-            => Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
+            => TestUtils::Test.Utilities.VisualBasicCodeFixVerifier<DoNotUseCountWhenAnyCanBeUsedAnalyzer, BasicDoNotUseCountWhenAnyCanBeUsedFixer>.VerifyCodeFixAsync(
                     $@"Imports System
 Imports System.Linq
 Namespace System.Data.Entity
