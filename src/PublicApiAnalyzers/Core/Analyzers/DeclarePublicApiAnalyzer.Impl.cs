@@ -208,6 +208,7 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
 
                 ApiName publicApiName = GetPublicApiName(symbol);
                 _visitedApiList.TryAdd(publicApiName.Name, default);
+                _visitedApiList.TryAdd(WithObliviousMarker(publicApiName.Name), default);
                 _visitedApiList.TryAdd(publicApiName.NameWithNullability, default);
                 _visitedApiList.TryAdd(WithObliviousMarker(publicApiName.NameWithNullability), default);
 
@@ -243,7 +244,12 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
                     if (!hasPublicApiEntryWithNullability && !hasPublicApiEntryWithNullabilityAndOblivious)
                     {
                         var hasPublicApiEntryWithoutNullability = _publicApiMap.TryGetValue(publicApiName.Name, out foundApiLine);
-                        if (!hasPublicApiEntryWithoutNullability)
+
+                        var hasPublicApiEntryWithoutNullabilityButOblivious =
+                            !hasPublicApiEntryWithoutNullability &&
+                            _publicApiMap.TryGetValue(WithObliviousMarker(publicApiName.Name), out foundApiLine);
+
+                        if (!hasPublicApiEntryWithoutNullability && !hasPublicApiEntryWithoutNullabilityButOblivious)
                         {
                             reportDeclareNewApi(symbol, isImplicitlyDeclaredConstructor, withObliviousIfNeeded(publicApiName.NameWithNullability));
                         }
@@ -548,7 +554,7 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
             {
                 if (symbol.Kind == SymbolKind.NamedType)
                 {
-                    return ObliviousDetector.TypeDeclarationInstance.Visit(symbol);
+                    return ObliviousDetector.IgnoreTopLevelNullabilityInstance.Visit(symbol);
                 }
 
                 return ObliviousDetector.Instance.Visit(symbol);
@@ -565,21 +571,21 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
                     string publicApiName = symbol.ToDisplayString(format);
 
                     ITypeSymbol? memberType = null;
-                    if (symbol is IMethodSymbol)
+                    if (symbol is IMethodSymbol method)
                     {
-                        memberType = ((IMethodSymbol)symbol).ReturnType;
+                        memberType = method.ReturnType;
                     }
-                    else if (symbol is IPropertySymbol)
+                    else if (symbol is IPropertySymbol property)
                     {
-                        memberType = ((IPropertySymbol)symbol).Type;
+                        memberType = property.Type;
                     }
-                    else if (symbol is IEventSymbol)
+                    else if (symbol is IEventSymbol @event)
                     {
-                        memberType = ((IEventSymbol)symbol).Type;
+                        memberType = @event.Type;
                     }
-                    else if (symbol is IFieldSymbol)
+                    else if (symbol is IFieldSymbol field)
                     {
-                        memberType = ((IFieldSymbol)symbol).Type;
+                        memberType = field.Type;
                     }
 
                     if (memberType != null)
@@ -764,14 +770,14 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
             /// </summary>
             private sealed class ObliviousDetector : SymbolVisitor<bool>
             {
-                public readonly static ObliviousDetector TypeDeclarationInstance = new ObliviousDetector(forTypeDeclaration: true);
-                public readonly static ObliviousDetector Instance = new ObliviousDetector(forTypeDeclaration: false);
+                public static readonly ObliviousDetector IgnoreTopLevelNullabilityInstance = new ObliviousDetector(ignoreTopLevelNullability: true);
+                public static readonly ObliviousDetector Instance = new ObliviousDetector(ignoreTopLevelNullability: false);
 
-                private readonly bool _forTypeDeclaration;
+                private readonly bool _ignoreTopLevelNullability;
 
-                private ObliviousDetector(bool forTypeDeclaration)
+                private ObliviousDetector(bool ignoreTopLevelNullability)
                 {
-                    _forTypeDeclaration = forTypeDeclaration;
+                    _ignoreTopLevelNullability = ignoreTopLevelNullability;
                 }
 
                 public override bool VisitField(IFieldSymbol symbol)
@@ -807,34 +813,34 @@ namespace Microsoft.CodeAnalysis.PublicApiAnalyzers
 
                 public override bool VisitNamedType(INamedTypeSymbol symbol)
                 {
-                    if (!_forTypeDeclaration)
+                    if (!_ignoreTopLevelNullability)
                     {
-                        if (symbol.ContainingType is INamedTypeSymbol containing)
-                        {
-                            if (Visit(containing))
-                            {
-                                return true;
-                            }
-                        }
-
                         if (symbol.IsReferenceType &&
                             symbol.NullableAnnotation() == NullableAnnotation.None)
                         {
                             return true;
                         }
+                    }
 
-                        foreach (var typeArgument in symbol.TypeArguments)
+                    if (symbol.ContainingType is INamedTypeSymbol containing)
+                    {
+                        if (IgnoreTopLevelNullabilityInstance.Visit(containing))
                         {
-                            if (Visit(typeArgument))
-                            {
-                                return true;
-                            }
+                            return true;
+                        }
+                    }
+
+                    foreach (var typeArgument in symbol.TypeArguments)
+                    {
+                        if (Instance.Visit(typeArgument))
+                        {
+                            return true;
                         }
                     }
 
                     foreach (var typeParameter in symbol.TypeParameters)
                     {
-                        if (Visit(typeParameter))
+                        if (Instance.Visit(typeParameter))
                         {
                             return true;
                         }
