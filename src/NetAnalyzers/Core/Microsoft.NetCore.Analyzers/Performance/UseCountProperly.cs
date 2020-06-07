@@ -18,6 +18,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
     /// CA1828: Do not use CountAsync()/LongCountAsync() when AnyAsync() can be used.
     /// CA1829: Use property instead of <see cref="Enumerable.Count{TSource}(System.Collections.Generic.IEnumerable{TSource})"/>, when available.
     /// CA1836: Prefer IsEmpty over Count when available.
+    /// CA1837: Prefer Skip(X).Any() over Count().
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
     public sealed class UseCountProperlyAnalyzer : DiagnosticAnalyzer
@@ -26,6 +27,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
         internal const string CA1828 = nameof(CA1828);
         internal const string CA1829 = nameof(CA1829);
         internal const string CA1836 = nameof(CA1836);
+        internal const string CA1837 = nameof(CA1837);
 
         private const string Length = nameof(Length);
         private const string Count = nameof(Count);
@@ -65,6 +67,11 @@ namespace Microsoft.NetCore.Analyzers.Performance
         private static readonly LocalizableString s_localizableTitle_CA1836 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferIsEmptyOverCountTitle), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
         private static readonly LocalizableString s_localizableMessage_CA1836 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferIsEmptyOverCountMessage), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
         private static readonly LocalizableString s_localizableDescription_CA1836 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferIsEmptyOverCountDescription), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
+
+        // CA1837
+        private static readonly LocalizableString s_localizableTitle_CA1837 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferSkipAnyOverCountMethodTitle), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
+        private static readonly LocalizableString s_localizableMessag_CA1837 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferSkipAnyOverCountMethodMessage), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
+        private static readonly LocalizableString s_localizableDescription_CA1837 = new LocalizableResourceString(nameof(MicrosoftNetCoreAnalyzersResources.PreferSkipAnyOverCountMethodDescription), MicrosoftNetCoreAnalyzersResources.ResourceManager, typeof(MicrosoftNetCoreAnalyzersResources));
 
         internal static readonly DiagnosticDescriptor s_rule_CA1827 = DiagnosticDescriptorHelper.Create(
             CA1827,
@@ -106,12 +113,23 @@ namespace Microsoft.NetCore.Analyzers.Performance
             isPortedFxCopRule: false,
             isDataflowRule: false);
 
+        internal static readonly DiagnosticDescriptor s_rule_CA1837 = DiagnosticDescriptorHelper.Create(
+            CA1837,
+            s_localizableTitle_CA1837,
+            s_localizableMessag_CA1837,
+            DiagnosticCategory.Performance,
+            RuleLevel.IdeHidden_BulkConfigurable,
+            description: s_localizableDescription_CA1837,
+            isPortedFxCopRule: false,
+            isDataflowRule: false);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(
                 s_rule_CA1827,
                 s_rule_CA1828,
                 s_rule_CA1829,
-                s_rule_CA1836);
+                s_rule_CA1836,
+                s_rule_CA1837);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -213,12 +231,13 @@ namespace Microsoft.NetCore.Analyzers.Performance
 
             bool useRightSide = default;
             bool shouldNegateIsEmpty = default;
+            int skipCount = default;
             string? operationKey = null;
 
             // Analyze binary operation.
             if (parentOperation is IBinaryOperation parentBinaryOperation)
             {
-                shouldReplaceParent = AnalyzeParentBinaryOperation(parentBinaryOperation, out useRightSide, out shouldNegateIsEmpty);
+                shouldReplaceParent = AnalyzeParentBinaryOperation(parentBinaryOperation, originalDefinition.Name, out useRightSide, out shouldNegateIsEmpty, out skipCount);
                 operationKey = useRightSide ? OperationBinaryRight : OperationBinaryLeft;
             }
             // Analyze invocation operation, potentially obj.Count().Equals(0).
@@ -236,7 +255,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
             }
 
             DetermineReportForInvocationAnalysis(context, invocationOperation, parentOperation,
-                shouldReplaceParent, isAsync, useRightSide, shouldNegateIsEmpty, hasPredicate, originalDefinition.Name, operationKey);
+                shouldReplaceParent, isAsync, useRightSide, shouldNegateIsEmpty, hasPredicate, originalDefinition.Name, operationKey, skipCount);
         }
 
         private static void AnalyzePropertyReference(OperationAnalysisContext context)
@@ -262,7 +281,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
             // Analyze binary operation.
             if (parentOperation is IBinaryOperation parentBinaryOperation)
             {
-                shouldReplaceParent = AnalyzeParentBinaryOperation(parentBinaryOperation, out useRightSide, out shouldNegateIsEmpty);
+                shouldReplaceParent = AnalyzeParentBinaryOperation(parentBinaryOperation, propertyName, out useRightSide, out shouldNegateIsEmpty, out _);
             }
             // Analyze invocation operation, potentially obj.Count.Equals(0).
             else if (parentOperation is IInvocationOperation parentInvocationOperation)
@@ -282,12 +301,12 @@ namespace Microsoft.NetCore.Analyzers.Performance
             }
         }
 
-        private static bool AnalyzeParentBinaryOperation(IBinaryOperation parent, out bool useRightSide, out bool shouldNegate)
+        private static bool AnalyzeParentBinaryOperation(IBinaryOperation parent, string methodName, out bool useRightSide, out bool shouldNegate, out int skipCount)
         {
             useRightSide = default;
-            if (!IsLeftCountComparison(parent, out shouldNegate))
+            if (!IsLeftCountComparison(parent, methodName, out shouldNegate, out skipCount))
             {
-                if (!IsRightCountComparison(parent, out shouldNegate))
+                if (!IsRightCountComparison(parent, methodName, out shouldNegate, out skipCount))
                 {
                     return false;
                 }
@@ -306,7 +325,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
             }
 
             IOperation constantOperation = isInstance ? parent.Arguments[0].Value : parent.Instance;
-            if (!TryGetZeroOrOneConstant(constantOperation, out int constant) || constant != 0)
+            if (!TryGetConstantValue(constantOperation, out int constant) || constant != 0)
             {
                 return false;
             }
@@ -319,10 +338,10 @@ namespace Microsoft.NetCore.Analyzers.Performance
             ITypeSymbol? type = invocationOperation.GetInstanceType();
 
             string propertyName = Length;
-            if (type != null && !TypeContainsVisibileProperty(context, type, propertyName, SpecialType.System_Int32, SpecialType.System_UInt64))
+            if (type != null && !TypeContainsVisibleProperty(context, type, propertyName, SpecialType.System_Int32, SpecialType.System_UInt64))
             {
                 propertyName = Count;
-                if (!TypeContainsVisibileProperty(context, type, propertyName, SpecialType.System_Int32, SpecialType.System_UInt64))
+                if (!TypeContainsVisibleProperty(context, type, propertyName, SpecialType.System_Int32, SpecialType.System_UInt64))
                 {
                     return;
                 }
@@ -398,7 +417,25 @@ namespace Microsoft.NetCore.Analyzers.Performance
                     properties: propertiesBuilder.ToImmutable()));
         }
 
-        private static void DetermineReportForInvocationAnalysis(OperationAnalysisContext context, IOperation operation, IOperation parent, bool shouldReplaceParent, bool isAsync, bool useRightSide, bool shouldNegateIsEmpty, bool hasPredicate, string methodName, string? operationKey)
+        private static void ReportCA1837(OperationAnalysisContext context, bool shouldNegate, int skipCount, string operationKey, string methodName, IOperation operation)
+        {
+            ImmutableDictionary<string, string?>.Builder propertiesBuilder = ImmutableDictionary.CreateBuilder<string, string?>(StringComparer.Ordinal);
+            propertiesBuilder.Add(OperationKey, operationKey);
+
+            if (shouldNegate)
+            {
+                propertiesBuilder.Add(ShouldNegateKey, null);
+            }
+
+            context.ReportDiagnostic(
+                operation.Syntax.CreateDiagnostic(
+                    rule: s_rule_CA1837,
+                    properties: propertiesBuilder.ToImmutable(),
+                    args: methodName));
+        }
+
+        private static void DetermineReportForInvocationAnalysis(OperationAnalysisContext context, IOperation operation, IOperation parent, bool shouldReplaceParent,
+            bool isAsync, bool useRightSide, bool shouldNegateIsEmpty, bool hasPredicate, string methodName, string? operationKey, int skipCount)
         {
             if (!shouldReplaceParent)
             {
@@ -413,36 +450,42 @@ namespace Microsoft.NetCore.Analyzers.Performance
                 bool shouldNegateAny = !shouldNegateIsEmpty;
                 ReportCA1828(context, shouldNegateAny, operationKey!, methodName, parent);
             }
-            else
+            else if (operation.GetInstanceType() is ITypeSymbol type)
             {
-                ITypeSymbol? type = operation.GetInstanceType();
-                if (type != null)
+                // If the invocation has a predicate we can only suggest CA1827;
+                // otherwise, we would loose the lambda if we suggest CA1829 or CA1836.
+                if (hasPredicate)
                 {
-                    // If the invocation has a predicate we can only suggest CA1827; 
-                    // otherwise, we would loose the lambda if we suggest CA1829 or CA1836. 
-                    if (hasPredicate)
+                    if (skipCount == 0)
                     {
                         bool shouldNegateAny = !shouldNegateIsEmpty;
                         ReportCA1827(context, shouldNegateAny, operationKey!, methodName, parent);
                     }
+                }
+                else
+                {
+                    if (TypeContainsVisibleProperty(context, type, IsEmpty, SpecialType.System_Boolean))
+                    {
+                        ReportCA1836(context, useRightSide, shouldNegateIsEmpty, parent);
+                    }
+                    else if (TypeContainsVisibleProperty(context, type, Length, SpecialType.System_Int32, SpecialType.System_UInt64))
+                    {
+                        ReportCA1829(context, Length, operation);
+                    }
+                    else if (TypeContainsVisibleProperty(context, type, Count, SpecialType.System_Int32, SpecialType.System_UInt64))
+                    {
+                        ReportCA1829(context, Count, operation);
+                    }
                     else
                     {
-                        if (TypeContainsVisibileProperty(context, type, IsEmpty, SpecialType.System_Boolean))
+                        bool shouldNegateAny = !shouldNegateIsEmpty;
+                        if (skipCount == 0)
                         {
-                            ReportCA1836(context, useRightSide, shouldNegateIsEmpty, parent);
-                        }
-                        else if (TypeContainsVisibileProperty(context, type, Length, SpecialType.System_Int32, SpecialType.System_UInt64))
-                        {
-                            ReportCA1829(context, Length, operation);
-                        }
-                        else if (TypeContainsVisibileProperty(context, type, Count, SpecialType.System_Int32, SpecialType.System_UInt64))
-                        {
-                            ReportCA1829(context, Count, operation);
-                        }
-                        else
-                        {
-                            bool shouldNegateAny = !shouldNegateIsEmpty;
                             ReportCA1827(context, shouldNegateAny, operationKey!, methodName, parent);
+                        }
+                        else if (methodName == Count)
+                        {
+                            ReportCA1837(context, shouldNegateAny, skipCount, operationKey!, methodName, parent);
                         }
                     }
                 }
@@ -454,7 +497,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
             ITypeSymbol? type = operation.GetInstanceType();
             if (type != null)
             {
-                if (TypeContainsVisibileProperty(context, type, IsEmpty, SpecialType.System_Boolean))
+                if (TypeContainsVisibleProperty(context, type, IsEmpty, SpecialType.System_Boolean))
                 {
                     ReportCA1836(context, useRightSide, shouldNegateIsEmpty, parent);
                 }
@@ -479,15 +522,17 @@ namespace Microsoft.NetCore.Analyzers.Performance
                 && IsInRangeInclusive((uint)methodSymbol.ContainingType.SpecialType, (uint)SpecialType.System_Int32, (uint)SpecialType.System_UInt64);
         }
 
-        private static bool IsLeftCountComparison(IBinaryOperation binaryOperation, out bool shouldNegate)
+        private static bool IsLeftCountComparison(IBinaryOperation binaryOperation, string methodName, out bool shouldNegate, out int skipCount)
         {
             shouldNegate = false;
+            skipCount = 0;
 
-            if (!TryGetZeroOrOneConstant(binaryOperation.RightOperand, out int constant))
+            if (!TryGetConstantValue(binaryOperation.RightOperand, out int constant))
             {
                 return false;
             }
 
+            var shouldReplaceParent = true;
             switch (constant)
             {
                 case 0:
@@ -505,6 +550,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
                             return false;
                     }
                     break;
+
                 case 1:
                     switch (binaryOperation.OperatorKind)
                     {
@@ -518,22 +564,51 @@ namespace Microsoft.NetCore.Analyzers.Performance
                             return false;
                     }
                     break;
+
                 default:
-                    return false;
+                    shouldReplaceParent = methodName == Count;
+                    switch (binaryOperation.OperatorKind)
+                    {
+                        case BinaryOperatorKind.GreaterThan:
+                            shouldNegate = false;
+                            skipCount = constant;
+                            break;
+                        case BinaryOperatorKind.GreaterThanOrEqual:
+                            shouldNegate = false;
+                            skipCount = constant - 1;
+                            break;
+                        case BinaryOperatorKind.Equals:
+                            shouldNegate = true;
+                            skipCount = constant;
+                            break;
+                        case BinaryOperatorKind.LessThanOrEqual:
+                            shouldNegate = true;
+                            skipCount = constant;
+                            break;
+                        case BinaryOperatorKind.LessThan:
+                            shouldNegate = true;
+                            skipCount = constant - 1;
+                            break;
+                        default:
+                            return false;
+                    }
+                    break;
             }
 
-            return true;
+            return shouldReplaceParent;
         }
 
-        private static bool IsRightCountComparison(IBinaryOperation binaryOperation, out bool shouldNegate)
+        private static bool IsRightCountComparison(IBinaryOperation binaryOperation, string methodName, out bool shouldNegate, out int skipCount)
         {
             shouldNegate = false;
+            skipCount = 0;
 
-            if (!TryGetZeroOrOneConstant(binaryOperation.LeftOperand, out int constant))
+            if (!TryGetConstantValue(binaryOperation.LeftOperand, out int constant))
             {
                 return false;
             }
 
+            var shouldReplaceParent = true;
             switch (constant)
             {
                 case 0:
@@ -553,6 +628,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
                             return false;
                     }
                     break;
+
                 case 1:
                     switch (binaryOperation.OperatorKind)
                     {
@@ -568,17 +644,49 @@ namespace Microsoft.NetCore.Analyzers.Performance
                             return false;
                     }
                     break;
+
                 default:
-                    return false;
+                    shouldReplaceParent = methodName == Count;
+                    switch (binaryOperation.OperatorKind)
+                    {
+                        case BinaryOperatorKind.GreaterThan:
+                            shouldNegate = true;
+                            skipCount = constant - 1;
+                            break;
+
+                        case BinaryOperatorKind.GreaterThanOrEqual:
+                            shouldNegate = true;
+                            skipCount = constant;
+                            break;
+
+                        case BinaryOperatorKind.Equals:
+                            shouldNegate = true;
+                            skipCount = constant;
+                            break;
+
+                        case BinaryOperatorKind.LessThanOrEqual:
+                            shouldNegate = false;
+                            skipCount = constant - 1;
+                            break;
+
+                        case BinaryOperatorKind.LessThan:
+                            shouldNegate = false;
+                            skipCount = constant;
+                            break;
+
+                        default:
+                            return false;
+                    }
+                    break;
             }
 
-            return true;
+            return shouldReplaceParent;
         }
 
-        private static bool TypeContainsVisibileProperty(OperationAnalysisContext context, ITypeSymbol type, string propertyName, SpecialType propertyType)
-            => TypeContainsVisibileProperty(context, type, propertyName, propertyType, propertyType);
+        private static bool TypeContainsVisibleProperty(OperationAnalysisContext context, ITypeSymbol type, string propertyName, SpecialType propertyType)
+            => TypeContainsVisibleProperty(context, type, propertyName, propertyType, propertyType);
 
-        private static bool TypeContainsVisibileProperty(OperationAnalysisContext context, ITypeSymbol type, string propertyName, SpecialType lowerBound, SpecialType upperBound)
+        private static bool TypeContainsVisibleProperty(OperationAnalysisContext context, ITypeSymbol type, string propertyName, SpecialType lowerBound, SpecialType upperBound)
         {
             if (TypeContainsMember(context, type, propertyName, lowerBound, upperBound, out bool isPropertyValidAndVisible))
             {
@@ -631,7 +739,7 @@ namespace Microsoft.NetCore.Analyzers.Performance
             }
         }
 
-        private static bool TryGetZeroOrOneConstant(IOperation operation, out int constant)
+        private static bool TryGetConstantValue(IOperation operation, out int constant)
         {
             constant = default;
 
@@ -657,16 +765,22 @@ namespace Microsoft.NetCore.Analyzers.Performance
                 return false;
             }
 
-            constant = comparandValueOpt.Value switch
+            int? intConstant = comparandValueOpt.Value switch
             {
                 int intValue => intValue,
-                uint uintValue => (int)uintValue,
-                long longValue => (int)longValue,
-                ulong ulongValue => (int)ulongValue,
-                _ => -1
+                uint uintValue when uintValue <= int.MaxValue => (int)uintValue,
+                long longValue when longValue <= int.MaxValue => (int)longValue,
+                ulong ulongValue when ulongValue <= int.MaxValue => (int)ulongValue,
+                _ => null,
             };
 
-            return constant == 0 || constant == 1;
+            if (intConstant.HasValue)
+            {
+                constant = intConstant.Value;
+                return true;
+            }
+
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

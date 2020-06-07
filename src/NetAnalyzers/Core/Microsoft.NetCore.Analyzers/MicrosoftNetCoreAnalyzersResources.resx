@@ -1344,4 +1344,13 @@
   <data name="PreferIsEmptyOverCountTitle" xml:space="preserve">
     <value>Prefer IsEmpty over Count</value>
   </data>
+  <data name="PreferSkipAnyOverCountMethodDescription" xml:space="preserve">
+    <value>A chained call to 'Skip().Any()' is faster than a call to 'Count' for most cases as it prevents a full iteration over the collection.</value>
+  </data>
+  <data name="PreferSkipAnyOverCountMethodMessage" xml:space="preserve">
+    <value>Replace this call to 'Count()' with a chained call to 'Skip()' and 'Any()'</value>
+  </data>
+  <data name="PreferSkipAnyOverCountMethodTitle" xml:space="preserve">
+    <value>Prefer 'Skip().Any()' over 'Count'</value>
+  </data>
 </root>

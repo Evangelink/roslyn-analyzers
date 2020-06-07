@@ -1378,6 +1378,21 @@
         <target state="new">Potential reference cycle in deserialized object graph</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferSkipAnyOverCountMethodDescription">
+        <source>A chained call to 'Skip().Any()' is faster than a call to 'Count' for most cases as it prevents a full iteration over the collection.</source>
+        <target state="new">A chained call to 'Skip().Any()' is faster than a call to 'Count' for most cases as it prevents a full iteration over the collection.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferSkipAnyOverCountMethodMessage">
+        <source>Replace this call to 'Count()' with a chained call to 'Skip()' and 'Any()'</source>
+        <target state="new">Replace this call to 'Count()' with a chained call to 'Skip()' and 'Any()'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferSkipAnyOverCountMethodTitle">
+        <source>Prefer 'Skip().Any()' over 'Count'</source>
+        <target state="new">Prefer 'Skip().Any()' over 'Count'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferStreamAsyncMemoryOverloadsDescription">
         <source>'Stream' has a 'ReadAsync' overload that takes a 'Memory&lt;Byte&gt;' as the first argument, and a 'WriteAsync' overload that takes a 'ReadOnlyMemory&lt;Byte&gt;' as the first argument. Prefer calling the memory based overloads, which are more efficient.</source>
         <target state="translated">Element „Stream” ma przeciążenie „ReadAsync”, które przyjmuje „Memory&lt;Byte&gt;” jako pierwszy argument i przeciążenie „WriteAsync”, które przyjmuje „ReadOnlyMemory&lt;Byte&gt;” jako pierwszy argument. Preferuj wywoływanie przeciążeń opartych na pamięci, co jest bardziej wydajne.</target>
