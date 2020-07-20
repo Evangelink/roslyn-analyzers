@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Threading;
 using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
@@ -21,6 +22,7 @@ namespace Roslyn.Diagnostics.CSharp.Analyzers
     public sealed class CSharpAvoidOptSuffixForNullableEnableCode : DiagnosticAnalyzer
     {
         internal const string OptSuffix = "Opt";
+        internal const string MemberBodySpanEnd = nameof(MemberBodySpanEnd);
 
         private static readonly LocalizableString s_localizableTitle = new LocalizableResourceString(nameof(RoslynDiagnosticsAnalyzersResources.AvoidOptSuffixForNullableEnableCodeTitle), RoslynDiagnosticsAnalyzersResources.ResourceManager, typeof(RoslynDiagnosticsAnalyzersResources));
         private static readonly LocalizableString s_localizableMessage = new LocalizableResourceString(nameof(RoslynDiagnosticsAnalyzersResources.AvoidOptSuffixForNullableEnableCodeMessage), RoslynDiagnosticsAnalyzersResources.ResourceManager, typeof(RoslynDiagnosticsAnalyzersResources));
@@ -67,10 +69,18 @@ namespace Roslyn.Diagnostics.CSharp.Analyzers
 
             var symbol = semanticModel.GetDeclaredSymbol(identifier.Parent, cancellationToken);
 
-
             if (ShouldReport(symbol))
             {
-                reportAction(identifier.CreateDiagnostic(Rule));
+                var propertiesBuilder = ImmutableDictionary.CreateBuilder<string, string?>(StringComparer.Ordinal);
+
+                if (symbol.ContainingSymbol != null &&
+                    (symbol.ContainingSymbol.Kind == SymbolKind.Method || symbol.ContainingSymbol.Kind == SymbolKind.Property || symbol.ContainingSymbol.Kind == SymbolKind.Event) &&
+                    FindFirstNonNullBodyOrExpressionBody(symbol.ContainingSymbol, cancellationToken) is { } memberBodySpanEnd)
+                {
+                    propertiesBuilder.Add(MemberBodySpanEnd, memberBodySpanEnd.ToString(CultureInfo.InvariantCulture));
+                }
+
+                reportAction(Diagnostic.Create(Rule, identifier.GetLocation(), propertiesBuilder.ToImmutable()));
             }
         }
 
@@ -94,6 +104,38 @@ namespace Roslyn.Diagnostics.CSharp.Analyzers
             }
 
             return false;
+        }
+
+        private static int? FindFirstNonNullBodyOrExpressionBody(ISymbol symbol, CancellationToken cancellationToken)
+        {
+            foreach (var syntaxReference in symbol.DeclaringSyntaxReferences)
+            {
+                var syntax = syntaxReference.GetSyntax(cancellationToken);
+
+                if (syntax is MethodDeclarationSyntax methodDeclaration)
+                {
+                    var bodyOrExpressionBody = FindLastStatementIfAny(methodDeclaration.Body) ?? methodDeclaration.ExpressionBody;
+                    if (bodyOrExpressionBody != null)
+                    {
+                        return bodyOrExpressionBody.Span.End;
+                    }
+                }
+                else if (syntax is AccessorDeclarationSyntax accessorDeclaration)
+                {
+                    var bodyOrExpressionBody = FindLastStatementIfAny(accessorDeclaration.Body) ?? accessorDeclaration.ExpressionBody;
+                    if (bodyOrExpressionBody != null)
+                    {
+                        return bodyOrExpressionBody.Span.End;
+                    }
+                }
+            }
+
+            return null;
+
+            static SyntaxNode? FindLastStatementIfAny(BlockSyntax? blockSyntax)
+                => blockSyntax != null && blockSyntax.Statements.Count > 0
+                    ? blockSyntax.Statements[^1]
+                    : null;
         }
     }
 }

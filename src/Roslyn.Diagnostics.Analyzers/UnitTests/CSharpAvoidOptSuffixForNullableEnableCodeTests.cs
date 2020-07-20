@@ -200,7 +200,7 @@ public class Class1
             }.RunAsync();
         }
 
-        [Fact(Skip = "https://github.com/dotnet/roslyn-analyzers/issues/3707")]
+        [Fact, WorkItem(3707, "https://github.com/dotnet/roslyn-analyzers/issues/3707")]
         public async Task RS0046_CSharp8_VariableWithoutOptAlreadyExists_DiagnosticButNoCodeFix()
         {
             await new VerifyCS.Test
@@ -266,7 +266,7 @@ public class Class1
             }.RunAsync();
         }
 
-        [Fact, WorkItem(3813, "https://github.com/dotnet/roslyn-analyzers/issues/3813")]
+        [Fact, WorkItem(3814, "https://github.com/dotnet/roslyn-analyzers/issues/3814")]
         public async Task RS0046_CSharp8_NullableEnabledCode_InterfaceImplementation_NoDiagnostic()
         {
             await new VerifyCS.Test
@@ -310,7 +310,7 @@ public class Class1 : ISomething
             }.RunAsync();
         }
 
-        [Fact, WorkItem(3813, "https://github.com/dotnet/roslyn-analyzers/issues/3813")]
+        [Fact, WorkItem(3814, "https://github.com/dotnet/roslyn-analyzers/issues/3814")]
         public async Task RS0046_CSharp8_NullableEnabledCode_Override_NoDiagnostic()
         {
             await new VerifyCS.Test
@@ -354,6 +354,48 @@ public class Derived : Base
         string? local = null, otherLocal = null;
 
         System.Console.WriteLine(""{0}, {1}, {2}"", sOpt, local, otherLocal);
+    }
+}",
+
+            }.RunAsync();
+        }
+
+        [Fact, WorkItem(3813, "https://github.com/dotnet/roslyn-analyzers/issues/3813")]
+        public async Task RS0046_CSharp8_NullableEnabledCode_LocalVariableConflictingWithMethodParameter_DiagnosticButNoFix()
+        {
+            await new VerifyCS.Test
+            {
+                LanguageVersion = LanguageVersion.CSharp8,
+                TestCode = @"
+#nullable enable
+
+using Microsoft.CodeAnalysis.Text;
+
+public class Base
+{
+    public void Method(TextSpan? [|selectionOpt|])
+    {
+        if (selectionOpt.HasValue)
+        {
+            var selection = selectionOpt.Value;
+            System.Console.WriteLine(selection);
+        }
+    }
+}",
+                FixedCode = @"
+#nullable enable
+
+using Microsoft.CodeAnalysis.Text;
+
+public class Base
+{
+    public void Method(TextSpan? [|selectionOpt|])
+    {
+        if (selectionOpt.HasValue)
+        {
+            var selection = selectionOpt.Value;
+            System.Console.WriteLine(selection);
+        }
     }
 }",
 

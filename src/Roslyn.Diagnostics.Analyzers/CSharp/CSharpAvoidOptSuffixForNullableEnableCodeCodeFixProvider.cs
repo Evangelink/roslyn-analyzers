@@ -2,6 +2,7 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -43,8 +44,13 @@ namespace Roslyn.Diagnostics.CSharp.Analyzers
 
                 var newName = variableSymbol.Name.Substring(0, variableSymbol.Name.Length - CSharpAvoidOptSuffixForNullableEnableCode.OptSuffix.Length);
 
-                // There is no symbol matching the new name so we can register the codefix
-                if (semanticModel.LookupSymbols(diagnostic.Location.SourceSpan.Start, variableSymbol.ContainingType, newName).IsEmpty)
+                var lookupSymbolsPosition = diagnostic.Properties.TryGetValue(CSharpAvoidOptSuffixForNullableEnableCode.MemberBodySpanEnd, out string memberBodySpanEndValue)
+                    && int.TryParse(memberBodySpanEndValue, out int memberBodySpanEnd)
+                    ? memberBodySpanEnd
+                    : diagnostic.Location.SourceSpan.End;
+
+                // Check there is no conflicting symbol before we register the codefix
+                if (semanticModel.LookupSymbols(lookupSymbolsPosition, name: newName).IsEmpty)
                 {
                     context.RegisterCodeFix(
                         CodeAction.Create(
