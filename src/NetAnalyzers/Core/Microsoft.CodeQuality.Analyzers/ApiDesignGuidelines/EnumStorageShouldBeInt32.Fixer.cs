@@ -28,7 +28,7 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            var title = MicrosoftCodeQualityAnalyzersResources.EnumStorageShouldBeInt32Title;
+            var title = MicrosoftCodeQualityAnalyzersResources.EnumStorageShouldBeInt32CodeFixTitle;
 
             // Get syntax root node
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -59,7 +59,7 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
                 return document;
             }
 
-            // Remove target node 
+            // Remove target node
             editor.RemoveNode(targetNode, SyntaxRemoveOptions.KeepLeadingTrivia | SyntaxRemoveOptions.KeepTrailingTrivia | SyntaxRemoveOptions.KeepExteriorTrivia | SyntaxRemoveOptions.KeepEndOfLine);
 
             return editor.GetChangedDocument();

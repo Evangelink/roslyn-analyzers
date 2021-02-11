@@ -1436,4 +1436,7 @@
   <data name="MarkAttributesWithAttributeUsageCodeFix" xml:space="preserve">
     <value>Apply 'AttributeUsageAttribute'</value>
   </data>
+  <data name="EnumStorageShouldBeInt32CodeFixTitle" xml:space="preserve">
+    <value>Make enum storage 'Int32'</value>
+  </data>
 </root>
