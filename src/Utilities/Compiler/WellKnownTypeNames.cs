@@ -7,6 +7,7 @@ namespace Analyzer.Utilities
     {
         public const string MicrosoftAspNetCoreAntiforgeryIAntiforgery = "Microsoft.AspNetCore.Antiforgery.IAntiforgery";
         public const string MicrosoftAspNetCoreHttpCookieOptions = "Microsoft.AspNetCore.Http.CookieOptions";
+        public const string MicrosoftAspNetCoreHttpHttpRequest = "Microsoft.AspNetCore.Http.HttpRequest";
         public const string MicrosoftAspNetCoreHttpInternalResponseCookies = "Microsoft.AspNetCore.Http.Internal.ResponseCookies";
         public const string MicrosoftAspNetCoreHttpIResponseCookies = "Microsoft.AspNetCore.Http.IResponseCookies";
         public const string MicrosoftAspNetCoreMvcController = "Microsoft.AspNetCore.Mvc.Controller";
@@ -186,6 +187,7 @@ namespace Analyzer.Utilities
         public const string SystemDiagnosticsDebuggerNonUserCode = "System.Diagnostics.DebuggerNonUserCodeAttribute";
         public const string SystemDiagnosticsDebuggerTypeProxyAttribute = "System.Diagnostics.DebuggerTypeProxyAttribute";
         public const string SystemDiagnosticsProcess = "System.Diagnostics.Process";
+        public const string SystemDiagnosticsProcessModule = "System.Diagnostics.ProcessModule";
         public const string SystemDiagnosticsProcessStartInfo = "System.Diagnostics.ProcessStartInfo";
         public const string SystemDiagnosticsTraceListener = "System.Diagnostics.TraceListener";
         public const string SystemDiagnosticsTracingEventSource = "System.Diagnostics.Tracing.EventSource";
@@ -202,6 +204,7 @@ namespace Analyzer.Utilities
         public const string SystemGC = "System.GC";
         public const string SystemGlobalizationCultureInfo = "System.Globalization.CultureInfo";
         public const string SystemGuid = "System.Guid";
+        public const string SystemHashCode = "System.HashCode";
         public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
         public const string SystemIComparable = "System.IComparable";
         public const string SystemIComparable1 = "System.IComparable`1";
@@ -231,6 +234,7 @@ namespace Analyzer.Utilities
         public const string SystemLinqQueryable = "System.Linq.Queryable";
         public const string SystemMarshalByRefObject = "System.MarshalByRefObject";
         public const string SystemMemory1 = "System.Memory`1";
+        public const string SystemMemoryExtensions = "System.MemoryExtensions";
         public const string SystemNetHttpHttpClient = "System.Net.Http.HttpClient";
         public const string SystemNetHttpHttpClientHandler = "System.Net.Http.HttpClientHandler";
         public const string SystemNetHttpWinHttpHandler = "System.Net.Http.WinHttpHandler";
@@ -246,6 +250,7 @@ namespace Analyzer.Utilities
         public const string SystemObject = "System.Object";
         public const string SystemObsoleteAttribute = "System.ObsoleteAttribute";
         public const string SystemOperatingSystem = "System.OperatingSystem";
+        public const string SystemOperationCanceledException = "System.OperationCanceledException";
         public const string SystemOutOfMemoryException = "System.OutOfMemoryException";
         public const string SystemPlatformNotSupportedException = "System.PlatformNotSupportedException";
         public const string SystemRandom = "System.Random";
@@ -263,6 +268,7 @@ namespace Analyzer.Utilities
         public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
         public const string SystemRuntimeCompilerServicesCallerMemberNameAttribute = "System.Runtime.CompilerServices.CallerMemberNameAttribute";
         public const string SystemRuntimeCompilerServicesCompilerGeneratedAttribute = "System.Runtime.CompilerServices.CompilerGeneratedAttribute";
+        public const string SystemRuntimeCompilerServicesConfiguredAsyncDisposable = "System.Runtime.CompilerServices.ConfiguredAsyncDisposable";
         public const string SystemRuntimeCompilerServicesConfiguredValueTaskAwaitable1 = "System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable`1";
         public const string SystemRuntimeCompilerServicesICriticalNotifyCompletion = "System.Runtime.CompilerServices.ICriticalNotifyCompletion";
         public const string SystemRuntimeCompilerServicesINotifyCompletion = "System.Runtime.CompilerServices.INotifyCompletion";
